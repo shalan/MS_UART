@@ -1,29 +1,28 @@
 # MS_UART
 
-UART, or universal asynchronous receiver-transmitter, is one of the most used device-to-device communication protocols. A UART enables two devices to exchange data serially without sharing the clock in a frame oriented way. The frame consists of a start bit, a number of data bits (typically one byte), a parity bit (optional) and 1-2 stop bits.
-MS_UART is a Soft IP with the following features:
-- A configurable frame format
-  - Data bits could vary from 5 to 9 bits
-  - Even, odd, stick, or no-parity bit generation/detection
-  - One or Two stop bit generation
-- Line-break detection
-- Configurable receiver timeout
-- Loopback capability for testing/debugging
-- Glitch Filter on the RX pin when enabled.
-- Matching received data detection
-- 16-byte TX and RX FIFOs with programmable thresholds
-- 16-bit prescaler (PR) for programmable baud rate generation
-- Ten Interrupt Sources:
-  + RX FIFO is full
-  + TX FIFO is empty
-  + RX FIFO level is above the set threshold
-  + TX FIFO level is below the set threshold
-  + Line break detection
-  + Receiver data match
-  + Frame Error
-  + Parity Error
-  + Overrun
-  + Receiver timeout
+UART (Universal Asynchronous Receiver-Transmitter) is one of the most widely used protocols for device-to-device serial communication. A UART enables two devices to exchange data asynchronously-meaning no shared clock is required-by transmitting data in a well-defined, frame-oriented format. Each frame typically consists of a start bit, a configurable number of data bits (commonly one byte), an optional parity bit for error checking, and one or two stop bits to signify the end of the frame.
+MS_UART is a flexible, feature-rich Soft IP core that implements a UART with the following capabilities:
+- Configurable Frame Format: Supports data frames with 5 to 9 data bits, allowing adaptation to various protocols and legacy systems.
+- Flexible Parity Options: Even, odd, stick, or no-parity bit generation and detection for robust error checking.
+- Programmable Stop Bits: Supports generation of one or two stop bits per frame.
+- Line-Break Detection: Detects line-break conditions for advanced protocol support.
+- Configurable Receiver Timeout: Programmable timeout for receiver inactivity, improving reliability in noisy environments.
+- Loopback Mode: Internal loopback capability for self-test and debugging without external wiring.
+- Glitch Filter: Optional glitch filter on the RX pin to suppress spurious noise and ensure data integrity.
+- Data Match Detection: Hardware detection of specific received data patterns for protocol triggers.
+- FIFO Buffers: Configurable transmit (TX) and receive (RX) FIFOs with programmable threshold levels to support high-throughput and reduce CPU intervention.
+- Programmable Baud Rate: 16-bit prescaler for flexible and precise baud rate generation.
+- Comprehensive Interrupt Support: Ten distinct interrupt sources for efficient event-driven operation:
+    - RX FIFO full
+    - TX FIFO empty
+    - RX FIFO level above threshold
+    - TX FIFO level below threshold
+    - Line break detected
+    - Receiver data match
+    - Frame error
+    - Parity error
+    - Overrun error
+    - Receiver timeout
 
 ## The wrapped IP
 
