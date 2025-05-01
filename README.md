@@ -250,7 +250,7 @@ You can install the IP either by cloning this repository or by using [IPM](https
 
 >**_NOTE:_** This section is intended for advanced users who wish to gain more information about the interface of the wrapped IP, in case they want to create their own wrappers.
 
-<img src="docs/_static/MS_UART.svg" width="600"/>
+<img src="docs/MS_UART.svg" width="600"/>
 
 #### Module Parameters 
 
