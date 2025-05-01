@@ -1,7 +1,7 @@
-# EF_UART
+# MS_UART
 
 UART, or universal asynchronous receiver-transmitter, is one of the most used device-to-device communication protocols. A UART enables two devices to exchange data serially without sharing the clock in a frame oriented way. The frame consists of a start bit, a number of data bits (typically one byte), a parity bit (optional) and 1-2 stop bits.
-EF_UART is a Soft IP with the following features:
+MS_UART is a Soft IP with the following features:
 - A configurable frame format
   - Data bits could vary from 5 to 9 bits
   - Even, odd, stick, or no-parity bit generation/detection
@@ -33,7 +33,7 @@ EF_UART is a Soft IP with the following features:
 
 Based on your use case, use one of the provided wrappers or create a wrapper for your system bus type. For an example of how to integrate the wishbone wrapper:
 ```verilog
-EF_UART_WB INST (
+MS_UART_WB INST (
     .clk_i(clk_i),
     .rst_i(rst_i),
     .adr_i(adr_i),
@@ -61,13 +61,13 @@ This IP generates interrupts on specific events, which are described in the [Int
 
 ## Implementation example  
 
-The following table is the result for implementing the EF_UART IP with different wrappers using Sky130 HD library and [OpenLane2](https://github.com/efabless/openlane2) flow.
+The following table is the result for implementing the MS_UART IP with different wrappers using Sky130 HD library and [OpenLane2](https://github.com/efabless/openlane2) flow.
 |Module | Number of cells | Max. freq |
 |---|---|---|
-|EF_UART|1590| 277 |
-|EF_UART_APB|1943|208|
-|EF_UART_AHBL|1973|250|
-|EF_UART_WB|2170|83|
+|MS_UART|1590| 277 |
+|MS_UART_APB|1943|208|
+|MS_UART_AHBL|1973|250|
+|MS_UART_WB|2170|83|
 ## The Programmer's Interface
 
 
@@ -230,34 +230,27 @@ The following are the bit definitions for the interrupt registers:
 |7|PRE|1|Parity Error; the receiver calculated parity does not match the received one.|
 |8|OR|1|Overrun; data has been received but the RX FIFO is full.|
 |9|RTO|1|Receiver Timeout; no data has been received for the time of a specified number of bits.|
-### Clock Gating
-The IP includes a clock gating feature that allows selective activation and deactivation of the clock using the ``GCLK`` register. This capability is implemented through the ``ef_util_gating_cell`` module, which is part of the common modules library, [ef_util_lib.v](https://github.com/efabless/EF_IP_UTIL/blob/main/hdl/ef_util_lib.v). By default, the clock gating is disabled. To enable behavioral implmentation clock gating, only for simulation purposes, you should define the ``CLKG_GENERIC`` macro. Alternatively, define the ``CLKG_SKY130_HD`` macro if you wish to use the SKY130 HD library clock gating cell, ``sky130_fd_sc_hd__dlclkp_4``.
 
-**Note:** If you choose the [OpenLane2](https://github.com/efabless/openlane2) flow for implementation and would like to enable the clock gating feature, you need to add ``CLKG_SKY130_HD`` macro to the ``VERILOG_DEFINES`` configuration variable. Update OpenLane2 YAML configuration file as follows: 
-```
-VERILOG_DEFINES:
-- CLKG_SKY130_HD
-```
 ## Firmware Drivers:
-Firmware drivers for EF_UART can be found in the [Drivers](https://github.com/efabless/EFIS/tree/main/Drivers) directory in the [EFIS](https://github.com/efabless/EFIS) (Efabless Firmware Interface Standard) repo. EF_UART driver documentation  is available [here](https://github.com/efabless/EFIS/blob/main/Drivers/Docs/EF_UART/README.md).
-You can also find an example C application using the EF_UART drivers [here](https://github.com/efabless/EFIS/tree/main/Drivers/Docs/EF_UART/example).
+Firmware drivers for MS_UART can be found in the [Drivers](https://github.com/efabless/EFIS/tree/main/Drivers) directory in the [EFIS](https://github.com/efabless/EFIS) (Efabless Firmware Interface Standard) repo. MS_UART driver documentation  is available [here](https://github.com/efabless/EFIS/blob/main/Drivers/Docs/MS_UART/README.md).
+You can also find an example C application using the MS_UART drivers [here](https://github.com/efabless/EFIS/tree/main/Drivers/Docs/MS_UART/example).
 ## Installation:
 You can install the IP either by cloning this repository or by using [IPM](https://github.com/efabless/IPM).
 ### 1. Using [IPM](https://github.com/efabless/IPM):
 - [Optional] If you do not have IPM installed, follow the installation guide [here](https://github.com/efabless/IPM/blob/main/README.md)
-- After installing IPM, execute the following command ```ipm install EF_UART```.
-> **Note:** This method is recommended as it automatically installs [EF_IP_UTIL](https://github.com/efabless/EF_IP_UTIL.git) as a dependency.
+- After installing IPM, execute the following command ```ipm install MS_UART```.
+> **Note:** This method is recommended as it automatically installs [MS_IP_UTIL](https://github.com/efabless/MS_IP_UTIL.git) as a dependency.
 ### 2. Cloning this repo: 
-- Clone [EF_IP_UTIL](https://github.com/efabless/EF_IP_UTIL.git) repository, which includes the required modules from the common modules library, [ef_util_lib.v](https://github.com/efabless/EF_IP_UTIL/blob/main/hdl/ef_util_lib.v).
-```git clone https://github.com/efabless/EF_IP_UTIL.git```
+- Clone [MS_IP_UTIL](https://github.com/efabless/MS_IP_UTIL.git) repository, which includes the required modules from the common modules library, [MS_util_lib.v](https://github.com/efabless/MS_IP_UTIL/blob/main/hdl/MS_util_lib.v).
+```git clone https://github.com/efabless/MS_IP_UTIL.git```
 - Clone the IP repository
-```git clone https://github.com/efabless/EF_UART.git```
+```git clone https://github.com/efabless/MS_UART.git```
 
 ### The Wrapped IP Interface 
 
 >**_NOTE:_** This section is intended for advanced users who wish to gain more information about the interface of the wrapped IP, in case they want to create their own wrappers.
 
-<img src="docs/_static/EF_UART.svg" width="600"/>
+<img src="docs/_static/MS_UART.svg" width="600"/>
 
 #### Module Parameters 
 
