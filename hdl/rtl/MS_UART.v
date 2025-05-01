@@ -46,14 +46,14 @@
         + Receiving a specific frame
 */
 
-`timescale			    1ns/1ps
+`timescale			1ns/1ps
 `default_nettype		none
 
 
-module AUCOHL_UART #(parameter  MDW = 9,        // Max data size/width
-                                FAW = 4,        // FIFO Address width; Depth=2^AW
-                                SC = 8,         // Number of samples per bit/baud
-                                GFLEN = 8       // Length (number of stages) of the glitch filter
+module MS_UART #(parameter  MDW = 9,        // Max data size/width
+                            FAW = 4,        // FIFO Address width; Depth = 2^AW
+                            SC = 8,         // Number of samples per bit/baud
+                            GFLEN = 8       // Length (number of stages) of the glitch filter
 ) (
     input   wire            clk,
     input   wire            rst_n,
@@ -74,6 +74,8 @@ module AUCOHL_UART #(parameter  MDW = 9,        // Max data size/width
     input   wire [5:0]      timeout_bits,
     input   wire            loopback_en,
     input   wire            glitch_filter_en,
+    input   wire            tx_fifo_flush,
+    input   wire            rx_fifo_flush,
             
     output  wire            tx_empty,
     output  wire            tx_full,
@@ -96,8 +98,8 @@ module AUCOHL_UART #(parameter  MDW = 9,        // Max data size/width
     output  wire            tx
 );
 
-    wire        tx_done;
-    wire        rx_done;
+    (* keep *) wire        tx_done;
+    (* keep *) wire        rx_done;
 
     wire        b_tick;
 
@@ -110,15 +112,16 @@ module AUCOHL_UART #(parameter  MDW = 9,        // Max data size/width
     wire        rx_filtered;
     wire        rx_in;
 
-    aucohl_sync rx_sync (
+    ef_util_sync rx_sync (
         .clk(clk),
         .in(rx),
         .out(rx_synched)
     );
 
-    aucohl_glitch_filter #(.N(GFLEN)) rx_glitch_filter (
+    ef_util_glitch_filter #(.N(GFLEN)) rx_glitch_filter (
         .clk(clk),
         .rst_n(rst_n),
+        .en(glitch_filter_en),
         .in(rx_synched),
         .out(rx_filtered)
     );
@@ -135,7 +138,7 @@ module AUCOHL_UART #(parameter  MDW = 9,        // Max data size/width
         .baudtick(b_tick)
     );
   
-    aucohl_fifo #(.DW(FIFO_DW), .AW(FAW)) fifo_tx (
+    ef_util_fifo #(.DW(FIFO_DW), .AW(FAW)) fifo_tx (
         .clk(clk),
         .rst_n(rst_n),
         .rd(tx_done),
@@ -144,7 +147,8 @@ module AUCOHL_UART #(parameter  MDW = 9,        // Max data size/width
         .empty(tx_empty),
         .full(tx_full),
         .rdata(tx_data),
-        .level(tx_level)
+        .level(tx_level),
+        .flush(tx_fifo_flush)
     );
 
     UART_TX #(.MDW(MDW), .NUM_SAMPLES(SC)) uart_tx (
@@ -160,7 +164,7 @@ module AUCOHL_UART #(parameter  MDW = 9,        // Max data size/width
         .tx(tx)
     );
 
-    aucohl_fifo #(.DW(FIFO_DW), .AW(FAW)) fifo_rx (
+    ef_util_fifo #(.DW(FIFO_DW), .AW(FAW)) fifo_rx (
         .clk(clk),
         .rst_n(rst_n),
         .rd(rd),
@@ -169,7 +173,8 @@ module AUCOHL_UART #(parameter  MDW = 9,        // Max data size/width
         .empty(rx_empty),
         .full(rx_full),
         .rdata(rdata),
-        .level(rx_level)
+        .level(rx_level),
+        .flush(rx_fifo_flush)
     );
 
     UART_RX #(.MDW(MDW), .NUM_SAMPLES(SC)) uart_rx (
@@ -208,8 +213,8 @@ module AUCOHL_UART #(parameter  MDW = 9,        // Max data size/width
                 samples_count <= samples_count + 1'b1;
     end
 
-    assign tx_level_below = (tx_level < txfifotr);
-    assign rx_level_above = (rx_level > rxfifotr);
+    assign tx_level_below = (tx_level < txfifotr) & ~tx_full;
+    assign rx_level_above = (rx_level > rxfifotr) | rx_full;
     assign overrun_flag = rx_full & rx_done;
     assign timeout_flag = (bits_count == timeout_bits);
 
@@ -275,7 +280,7 @@ module UART_RX #(parameter NUM_SAMPLES = 16, MDW = 8)(
     reg [3:0]   b_reg;            //baud-rate/over sampling counter
     reg [3:0]   b_next;
     reg [3:0]   count_reg;        //data-bit counter
-    reg [2:0]   count_next;
+    reg [3:0]   count_next;
     reg [8:0]   data_reg;         //data register
     reg [8:0]   data_next;
     reg         p_error_reg;
@@ -317,6 +322,7 @@ module UART_RX #(parameter NUM_SAMPLES = 16, MDW = 8)(
         data_next = data_reg;
         rx_done = 1'b0;
         p_error_next = 1'b0;
+        f_error_next = 1'b0;
             
         case(current_state)
             idle_st:
@@ -438,25 +444,23 @@ module UART_TX #(parameter NUM_SAMPLES = 16, MDW = 8)(
     localparam [2:0] parity_st  = 3'b011;
     localparam [2:0] stop0_st   = 3'b100;
     localparam [2:0] stop1_st   = 3'b101;
-/*
-    //STATE DEFINES  
-    localparam [1:0] idle_st = 2'b00;
-    localparam [1:0] start_st = 2'b01;
-    localparam [1:0] data_st = 2'b11;
-    localparam [1:0] stop_st = 2'b10;
-*/
+
     //Internal Signals  
     reg [2:0]   current_state;
     reg [2:0]   next_state;
     reg [3:0]   b_reg;          // baud tick counter
     reg [3:0]   b_next;
-    reg [2:0]   count_reg;      // data bit counter
-    reg [2:0]   count_next;
+    reg [3:0]   count_reg;      // data bit counter
+    reg [3:0]   count_next;
     reg [8:0]   data_reg;       // data register
     reg [8:0]   data_next;
     reg         tx_reg;         // output data reg
     reg         tx_next;
-  
+
+    // prepare the data to claculate the parity by removing any extra bits entered
+	// by the user by error
+    wire [MDW-1:0] pdata = (d_in) & ~({MDW{1'b1}} << data_size);
+
     //State Machine  
     always @(posedge clk, negedge resetn) begin
         if(!resetn) begin
@@ -526,13 +530,13 @@ module UART_TX #(parameter NUM_SAMPLES = 16, MDW = 8)(
             parity_st: begin
                 tx_next = 1'b0;
                 case (parity_type)
-                    3'b001 : //Odd parity
-                        tx_next = ~^d_in;
-                    3'b010 : //Even parity
-                        tx_next = ^d_in;
-                    3'b100 : //Sticky 0 parity
+                    3'b001 : // Odd parity
+                        tx_next = ~^pdata;
+                    3'b010 : // Even parity
+                        tx_next = ^pdata;
+                    3'b100 : // Sticky 0 parity
                         tx_next = 0;
-                    3'b101 : //Sticky 1 parity
+                    3'b101 : // Sticky 1 parity
                         tx_next = 1;
                 endcase
                 if(b_tick)
