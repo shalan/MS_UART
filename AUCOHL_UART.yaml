@@ -1,14 +1,38 @@
 ---
 info:
-  name: AUCOHL_UART
-  description: A Universal Asynchronous Receiver Transmitter
-  repo: github.com/shalan/AUCOHL_UART
-  owner: AUCOHL
-  license: MIT
+  name: EF_UART
+  description: |
+    UART, or universal asynchronous receiver-transmitter, is one of the most used device-to-device communication protocols. A UART enables two devices to exchange data serially without sharing the clock in a frame oriented way. The frame consists of a start bit, a number of data bits (typically one byte), a parity bit (optional) and 1-2 stop bits.
+    EF_UART is a Soft IP with the following features:
+    - A configurable frame format
+      - Data bits could vary from 5 to 9 bits
+      - Even, odd, stick, or no-parity bit generation/detection
+      - One or Two stop bit generation
+    - Line-break detection
+    - Configurable receiver timeout
+    - Loopback capability for testing/debugging
+    - Glitch Filter on the RX pin when enabled.
+    - Matching received data detection
+    - 16-byte TX and RX FIFOs with programmable thresholds
+    - 16-bit prescaler (PR) for programmable baud rate generation
+    - Ten Interrupt Sources:
+      + RX FIFO is full
+      + TX FIFO is empty
+      + RX FIFO level is above the set threshold
+      + TX FIFO level is below the set threshold
+      + Line break detection
+      + Receiver data match
+      + Frame Error
+      + Parity Error
+      + Overrun
+      + Receiver timeout
+  repo: https://github.com/shalan/MS_UART.git
+  owner: Mohamed Shalan
+  license: APACHE 2.0
   author: Mohamed Shalan
   email: mshalan@aucegypt.edu
   version: v1.0.0
-  date: 3-18-2022
+  date: 01-05-2025
   category: digital
   tags:
     - peripheral
@@ -16,102 +40,189 @@ info:
     - serial
   bus:
     - generic
-  type": soft
+  type: soft
   status: verified
-  cell_count: "690"
+  cell_count:
+    - IP: 1590
+    - APB: 1943
+    - AHBL: 1973
+    - WB: 2170
   width": "0.0"
   height": "0.0"
   technology: n/a
-  clock_freq_mhz: "10"
+  clock_freq_mhz:
+    - IP: 277
+    - APB: 208
+    - AHBL: 250
+    - WB: 83
   digital_supply_voltage: n/a
   analog_supply_voltage: n/a
+  irq_reg_offset: 0xFF00
+  fifo_reg_offset: 0xFE00
 
 parameters:
   - name: SC
     default: 8
+    description: "Number of samples per bit/baud"
   - name: MDW
     default: 9
+    description: "Max data size/width"
   - name: GFLEN
     default: 8
+    description: "Length (number of stages) of the glitch filter"
   - name: FAW
     default: 4
+    description: "FIFO Address width; Depth=2^AW"
 
 ports:
   - name: prescaler
     width: 16
+    direction: input
+    description: Prescaler used to determine the baud rate.
   - name: en
     width: 1
+    direction: input
+    description: Enable for UART
   - name: tx_en
     width: 1
+    direction: input
+    description: Enable for UART transmission 
   - name: rx_en
     width: 1
+    direction: input
+    description: Enable for UART receiving  
   - name: wdata
     width: MDW
+    direction: input
+    description: Transmission data 
   - name: timeout_bits
     width: 6
+    direction: input
+    description: Receiver Timeout measured in number of bits.
   - name: loopback_en
     width: 1
+    direction: input
+    description: Loopback enable; connect tx to the rx 
   - name: glitch_filter_en
     width: 1
+    direction: input
+    description: UART Glitch Filter on RX enable
   - name: tx_level
     width: FAW
+    direction: output
+    description: The current level of TX FIFO
   - name: rx_level
     width: FAW
+    direction: output
+    description: The current level of RX FIFO
   - name: rd
     width: 1
+    direction: input
+    description: Read from RX FIFO signal 
   - name: wr
     width: 1
+    direction: input
+    description: Write to TX FIFO signal 
+  - name: tx_fifo_flush
+    width: 1
+    direction: input
+    description: Flushes the TX FIFO. 
+  - name: rx_fifo_flush
+    width: 1
+    direction: input
+    description: Flushes the RX FIFO.
   - name: data_size
     width: 4
+    direction: input
+    description: Number of data bits in the frame 
   - name: stop_bits_count
     width: 1
+    direction: input
+    description: Number of stop bits in the frame (could be 1 or 2) 
   - name: parity_type
     width: 3
+    direction: input
+    description: Type of Parity in the frame 
   - name: txfifotr
     width: FAW
+    direction: input
+    description: TX FIFO Threshold
   - name: rxfifotr
     width: FAW
+    direction: input
+    description: RX FIFO Threshold 
   - name: match_data
     width: MDW
+    direction: input
+    description: Match data (match flag would be raised if it matches what is received)
   - name: tx_empty
     width: 1
+    direction: output
+    description: TX empty flag
   - name: tx_full
     width: 1
+    direction: output
+    description: TX full flag
   - name: tx_level_below
     width: 1
+    direction: output
+    description: TX level below flag
   - name: rdata
     width: MDW
+    direction: output
+    description: Received Data 
   - name: rx_empty
     width: 1
+    direction: output
+    description: RX empty flag
   - name: rx_full
     width: 1
+    direction: output
+    description: RX full flag
   - name: rx_level_above
     width: 1
+    direction: output
+    description: RX level above flag
   - name: break_flag
     width: 1
+    direction: output
+    description: Break flag
   - name: match_flag
     width: 1
+    direction: output
+    description: Match flag
   - name: frame_error_flag
     width: 1
+    direction: output
+    description: Frame error flag
   - name: parity_error_flag
     width: 1
+    direction: output
+    description: Parity error flag
   - name: overrun_flag
     width: 1
+    direction: output
+    description: Overrun flag
   - name: timeout_flag
     width: 1
+    direction: output
+    description: Timeout flag
 
 external_interface:
   - name: rx
     port: rx
     direction: input
+    description: This is the receive line where the UART device receives data from another device. It carries the incoming data signals.
     width: 1
   - name: tx
     port: tx
     direction: output
     width: 1
+    description: This is the transmission line where the UART device sends data to another device. It carries the outgoing data signals.
 
 clock:
   name: clk
+  gated: 'yes'
 
 reset:
   name: rst_n
@@ -138,15 +249,15 @@ registers:
     size: 16
     mode: w
     fifo: no
-    offset: 12
+    offset: 8
     bit_access: no
     write_port: prescaler
-    description: The Prescaler register; used to determine the baud rate. $Baud\ rate = Clock\ freq/((PR+1)\times16)$.
+    description: The Prescaler register; used to determine the baud rate. $baud_rate = clock_freq/((PR+1)*SC)$. SC (the number of samples per bit/baud) is a module parameter with a default value of 8.
   - name: CTRL
     size: 5
     mode: w
     fifo: no
-    offset: 8
+    offset: 12
     bit_access: no
     description: UART Control Register
     fields:
@@ -174,7 +285,7 @@ registers:
         bit_offset: 4
         bit_width: 1
         write_port: glitch_filter_en
-        description: UART Glitch Filer on RX enable
+        description: "UART Glitch Filter on RX enable (Note: glitch filter is only functional when PR > 0)"
   - name: CFG
     size: 14
     mode: w
@@ -205,42 +316,6 @@ registers:
         bit_width: 6
         write_port: timeout_bits
         description: Receiver Timeout measured in number of bits
-  - name: FIFOCTRL
-    size: 16
-    mode: w
-    fifo: no
-    offset: 20
-    bit_access: no
-    description: FIFO Control Register
-    fields:
-      - name: TXLT
-        bit_offset: 0
-        bit_width: FAW
-        write_port: txfifotr
-        description: Transmit FIFO Level Threshold
-      - name: RXLT
-        bit_offset: 8
-        bit_width: FAW
-        write_port: rxfifotr
-        description: Receive FIFO Level Threshold
-  - name: FIFOS
-    size: 16
-    mode: r
-    fifo: no
-    offset: 24
-    bit_access: no
-    description: FIFO Status Register
-    fields:
-      - name: RXL
-        bit_offset: 0
-        bit_width: FAW
-        read_port: rx_level
-        description: Receive FIFO Level
-      - name: TXL
-        bit_offset: 8
-        bit_width: FAW
-        read_port: tx_level
-        description: Transmit FIFO Level
   - name: MATCH
     size: MDW
     mode: w
@@ -268,7 +343,7 @@ flags:
     description: Line Break; 13 consecutive 0's have been detected on the line. 
   - name: MATCH
     port: match_flag
-    description: Match; the receive data matches the MATCH register.
+    description: Match; the received data matches the MATCH register.
   - name: FE
     port: frame_error_flag
     description: Framing Error; the receiver does not see a "stop" bit at the expected "stop" bit time.
@@ -283,15 +358,25 @@ flags:
     description: Receiver Timeout; no data has been received for the time of a specified number of bits.
 
 fifos:
-  - type: read  
+  - name: RX_FIFO
+    type: read  
     width: MDW
-    depth: 16 
+    address_width: FAW
     register: RXDATA
     data_port: rdata
     control_port: rd
-  - type: write
+    flush_enable: True
+    flush_port: rx_fifo_flush
+    threshold_port: rxfifotr
+    level_port: rx_level
+  - name: TX_FIFO
+    type: write
     width: MDW
-    depth: 16
+    address_width: FAW
     register: TXDATA
     data_port: wdata
     control_port: wr
+    flush_enable: True
+    flush_port: tx_fifo_flush
+    threshold_port: txfifotr
+    level_port: tx_level
